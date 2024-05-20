@@ -31,7 +31,7 @@ If you encounter any difficulties running the executables or need further assist
 1. Clone the repository:
 
    ```bash
-    https://github.com/ilyassbaa/Chat-Application.git
+    git clone https://github.com/ilyassbaa/Chat-Application.git
 
 2. Compile the source code:
 
