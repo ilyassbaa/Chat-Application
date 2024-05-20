@@ -48,4 +48,4 @@ If you encounter any difficulties running the executables or need further assist
 
    ```bash
     ./client.exe server_ip
-    Replace server_ip with the IP address of the machine where the server is running.
+ Replace server_ip with the IP address of the machine where the server is running.
