@@ -64,5 +64,6 @@ int main() {
 
     closesocket(client_socket);
     WSACleanup();
+    
     return 0;
 }
