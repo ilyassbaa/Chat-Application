@@ -72,19 +72,17 @@ int main() {
 
     std::cout << "Server listening on port " << PORT << std::endl;
 
-    while (true) {
-        sockaddr_in client_addr;
-        int client_size = sizeof(client_addr);
-        SOCKET client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_size);
-        if (client_socket == INVALID_SOCKET) {
-            std::cerr << "Accept echoue." << std::endl;
-            continue;
-        }
+// Accept client connections
+    SOCKET client_socket;
+    sockaddr_in client_addr;
+    int client_addr_size = sizeof(client_addr);
 
-        clients.push_back(client_socket);
-        std::thread(handle_client, client_socket).detach();
+    // Main server loop to accept and handle client connections
+    while ((client_socket = accept(server_socket, (sockaddr*)&client_addr, &client_addr_size)) != INVALID_SOCKET) {
+        handle_client(client_socket);
     }
 
+    // Cleanup and close the server socket
     closesocket(server_socket);
     WSACleanup();
     return 0;
