@@ -36,13 +36,13 @@ void handle_client(SOCKET client_socket) {
 int main() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "Echec de l'initialisation de Winsock." << std::endl;
+        std::cerr << "Echec de l'initialisation de Winsock " << std::endl;
         return 1;
     }
 
     SOCKET server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == INVALID_SOCKET) {
-        std::cerr << "Impossible de creer le socket." << std::endl;
+        std::cerr << "Impossible de creer le socket " << std::endl;
         WSACleanup();
         return 1;
     }
@@ -53,14 +53,14 @@ int main() {
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        std::cerr << "Bind echoue." << std::endl;
+        std::cerr << "Bind echoue !" << std::endl;
         closesocket(server_socket);
         WSACleanup();
         return 1;
     }
 
     if (listen(server_socket, 10) == SOCKET_ERROR) {
-        std::cerr << "ecoute echouee." << std::endl;
+        std::cerr << "ecoute echouee " << std::endl;
         closesocket(server_socket);
         WSACleanup();
         return 1;
