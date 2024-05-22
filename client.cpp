@@ -39,7 +39,7 @@ int main() {
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);  // Replace with server IP address if necessary
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);  
 
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
         std::cerr << "Connexion au serveur echouee !" << std::endl;
