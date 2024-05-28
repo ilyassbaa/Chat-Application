@@ -10,80 +10,77 @@
 
 #define PORT 12345
 
-// Function to handle communication with a connected client
-void handle_client(SOCKET client_socket) {
-   char client_name[256];
-    int name_len = recv(client_socket, client_name, sizeof(client_name), 0);
-    if (name_len > 0) {
-        client_name[name_len] = '\0'; 
-        std::cout << "Client connected: " << client_name << std::endl;
-    }
+std::vector<SOCKET> clients;
 
-    // Buffer to store received messages
+void gerer_client(SOCKET client_socket) {
     char buffer[1024];
-    int bytes_received;
-    
-    // Continuously receive messages from the client
-    while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
-        buffer[bytes_received] = '\0';
-        std::cout << client_name << ": " << buffer << std::endl;
+    while (true) {
+        memset(buffer, 0, 1024);
+        int bytes_received = recv(client_socket, buffer, 1024, 0);
+        if (bytes_received <= 0) {
+            closesocket(client_socket);
+            clients.erase(std::remove(clients.begin(), clients.end(), client_socket), clients.end());
+            break;
+        } else {
+            std::cout << "Message reçu: " << buffer << std::endl;
+            for (SOCKET client : clients) {
+                if (client != client_socket) {
+                    send(client, buffer, bytes_received, 0);
+                }
+            }
+        }
     }
-    // Close the client socket when done
-    closesocket(client_socket);
 }
 
 int main() {
-    // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "WSAStartup failed." << std::endl;
+        std::cerr << "Échec de l'initialisation de Winsock." << std::endl;
         return 1;
     }
 
-    // Create a socket for the server
-    SOCKET server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == INVALID_SOCKET) {
-        std::cerr << "Socket creation failed." << std::endl;
+    SOCKET serveur_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serveur_socket == INVALID_SOCKET) {
+        std::cerr << "Impossible de créer le socket." << std::endl;
         WSACleanup();
         return 1;
     }
 
-    // Configure server address structure
-    sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT); // Server will listen on port
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Listen on any available network interface
+    sockaddr_in adresse_serveur;
+    adresse_serveur.sin_family = AF_INET;
+    adresse_serveur.sin_port = htons(PORT);
+    adresse_serveur.sin_addr.s_addr = INADDR_ANY;
 
-    // Bind the socket to the configured address and port
-    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        std::cerr << "Binding socket failed." << std::endl;
-        closesocket(server_socket);
-        WSACleanup();
-        return 1;
-    }
-    
-    // Start listening for incoming connection requests
-    if (listen(server_socket, SOMAXCONN) == SOCKET_ERROR) {
-        std::cerr << "Listening on socket failed." << std::endl;
-        closesocket(server_socket);
+    if (bind(serveur_socket, (struct sockaddr*)&adresse_serveur, sizeof(adresse_serveur)) == SOCKET_ERROR) {
+        std::cerr << "Échec du bind." << std::endl;
+        closesocket(serveur_socket);
         WSACleanup();
         return 1;
     }
 
-    std::cout << "Server listening on port " << PORT << std::endl;
-
-// Accept client connections
-    SOCKET client_socket;
-    sockaddr_in client_addr;
-    int client_addr_size = sizeof(client_addr);
-
-    // Main server loop to accept and handle client connections
-    while ((client_socket = accept(server_socket, (sockaddr*)&client_addr, &client_addr_size)) != INVALID_SOCKET) {
-        handle_client(client_socket);
+    if (listen(serveur_socket, 10) == SOCKET_ERROR) {
+        std::cerr << "Échec de l'écoute." << std::endl;
+        closesocket(serveur_socket);
+        WSACleanup();
+        return 1;
     }
 
-    // Cleanup and close the server socket
-    closesocket(server_socket);
+    std::cout << "Serveur en écoute sur le port " << PORT << std::endl;
+
+    while (true) {
+        sockaddr_in adresse_client;
+        int taille_client = sizeof(adresse_client);
+        SOCKET client_socket = accept(serveur_socket, (struct sockaddr*)&adresse_client, &taille_client);
+        if (client_socket == INVALID_SOCKET) {
+            std::cerr << "Échec de l'acceptation." << std::endl;
+            continue;
+        }
+
+        clients.push_back(client_socket);
+        std::thread(gerer_client, client_socket).detach();
+    }
+
+    closesocket(serveur_socket);
     WSACleanup();
     return 0;
 }
